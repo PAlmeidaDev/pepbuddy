@@ -1,0 +1,13 @@
+# PyCharm / IDE
+.idea/
+
+# Base de Dados
+db.sqlite3
+
+# Ambiente Virtual
+.venv/
+venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
