@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
+from datetime import timedelta
 
 
 class Medication(models.Model):
@@ -8,12 +10,32 @@ class Medication(models.Model):
 
     name = models.CharField(max_length=100)
     dosage = models.CharField(max_length=50, help_text="Ex: 500mg, 1 comprimido")
+    last_taken = models.DateTimeField(blank=True, null=True)
 
     # Stock atual para avisar quando estiver a acabar
     current_stock = models.IntegerField(default=0)
 
     # Metadados úteis para o portefólio
     created_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def next_dose_time(self):
+        schedule = self.schedules.filter(is_active=True).first()
+        if not schedule:
+            return None
+
+        # Logic: Use last_taken if it exists, otherwise use the original 'today' logic
+        if self.last_taken:
+            return self.last_taken + timedelta(hours=schedule.interval_hours)
+
+        # Fallback if you haven't logged a dose yet
+        now = timezone.now()
+        next_dose = timezone.make_aware(
+            timezone.datetime.combine(now.date(), schedule.start_time)
+        )
+        if next_dose < now:
+            next_dose += timedelta(hours=schedule.interval_hours)
+        return next_dose
 
     def __str__(self):
         return f"{self.name} - {self.dosage}"

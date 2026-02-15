@@ -7,9 +7,10 @@ class ScheduleSerializer(serializers.ModelSerializer):
         fields = ['id', 'start_time', 'interval_hours', 'is_active']
 
 class MedicationSerializer(serializers.ModelSerializer):
-    # This nesting shows the schedules inside the medication JSON!
     schedules = ScheduleSerializer(many=True, read_only=True)
+    next_dose = serializers.ReadOnlyField(source='next_dose_time')
 
     class Meta:
         model = Medication
-        fields = ['id', 'name', 'dosage', 'current_stock', 'schedules']
+        # Add 'last_taken' here
+        fields = ['id', 'name', 'dosage', 'current_stock', 'schedules', 'next_dose', 'last_taken']
