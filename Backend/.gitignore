@@ -1,8 +1,8 @@
 # PyCharm / IDE
-.idea/
+../.idea/
 
 # Base de Dados
-db.sqlite3
+Backend/db.sqlite3
 
 # Ambiente Virtual
 .venv/
@@ -12,4 +12,4 @@ venv/
 __pycache__/
 *.py[cod]
 
-.env
+Backend/.env
