@@ -7,6 +7,7 @@ from django.utils import timezone
 from rest_framework import viewsets
 from .models import Medication
 from .serializers import MedicationSerializer
+from django.contrib.auth.models import User
 
 
 class MedicationViewSet(viewsets.ModelViewSet):
@@ -15,6 +16,15 @@ class MedicationViewSet(viewsets.ModelViewSet):
 
     # Tell the view which translator to use
     serializer_class = MedicationSerializer
+
+    def perform_create(self, serializer):  # big safety risk only being used for testing will be removed after.
+        if self.request.user.is_authenticated:
+            # If logged in, use that user
+            serializer.save(user=self.request.user)
+        else:
+            # If not logged in (Anonymous), use the first user in the database (your admin)
+            first_user = User.objects.first()
+            serializer.save(user=first_user)
 
     # Logic: Only show the medications belonging to the logged-in user
     def get_queryset(self):
