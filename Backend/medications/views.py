@@ -20,11 +20,11 @@ class MedicationViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):  # big safety risk only being used for testing will be removed after.
         if self.request.user.is_authenticated:
             # If logged in, use that user
-            serializer.save(user=self.request.user)
+            serializer.save(user=self.request.user, last_taken=timezone.now())
         else:
             # If not logged in (Anonymous), use the first user in the database (your admin)
             first_user = User.objects.first()
-            serializer.save(user=first_user)
+            serializer.save(user=first_user, last_taken=timezone.now())
 
     # Logic: Only show the medications belonging to the logged-in user
     def get_queryset(self):

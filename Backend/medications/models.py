@@ -15,30 +15,20 @@ class Medication(models.Model):
     # Stock atual para avisar quando estiver a acabar
     current_stock = models.IntegerField(default=0)
 
+    hours_between_doses = models.IntegerField(default=8)
     # Metadados úteis para o portefólio
     created_at = models.DateTimeField(auto_now_add=True)
 
     @property
     def next_dose_time(self):
-        schedule = self.schedules.filter(is_active=True).first()
-        if not schedule:
-            return None
+        # Se não houver dose registrada, usamos o "agora" como base de cálculo
+        if not self.last_taken:
+            # Você pode retornar None ou calcular a partir de 'agora'
+            # Vamos usar 'agora' para evitar o erro de 1970 no React
+            return timezone.now() + timedelta(hours=self.hours_between_doses)
 
-        # Logic: Use last_taken if it exists, otherwise use the original 'today' logic
-        if self.last_taken:
-            return self.last_taken + timedelta(hours=schedule.interval_hours)
-
-        # Fallback if you haven't logged a dose yet
-        now = timezone.now()
-        next_dose = timezone.make_aware(
-            timezone.datetime.combine(now.date(), schedule.start_time)
-        )
-        if next_dose < now:
-            next_dose += timedelta(hours=schedule.interval_hours)
-        return next_dose
-
-    def __str__(self):
-        return f"{self.name} - {self.dosage}"
+        # Se existe uma última dose, o cálculo é simples e direto
+        return self.last_taken + timedelta(hours=self.hours_between_doses)
 
 
 class Schedule(models.Model):

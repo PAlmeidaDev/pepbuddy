@@ -7,10 +7,10 @@ class ScheduleSerializer(serializers.ModelSerializer):
         fields = ['id', 'start_time', 'interval_hours', 'is_active']
 
 class MedicationSerializer(serializers.ModelSerializer):
-    schedules = ScheduleSerializer(many=True, read_only=True)
+    # Mantém isto porque a tua @property no model chama-se next_dose_time
     next_dose = serializers.ReadOnlyField(source='next_dose_time')
 
     class Meta:
         model = Medication
-        # Add 'last_taken' here
-        fields = ['id', 'name', 'dosage', 'current_stock', 'schedules', 'next_dose', 'last_taken']
+        # Verifica se todos estes campos existem agora no seu models.py
+        fields = ['id', 'name', 'dosage', 'current_stock', 'last_taken', 'hours_between_doses', 'next_dose']
