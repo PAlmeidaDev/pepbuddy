@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
 from rest_framework import viewsets
-from .models import Medication
+from .models import Medication, DoseLog
 from .serializers import MedicationSerializer
 from django.contrib.auth.models import User
 
@@ -38,13 +38,18 @@ class MedicationViewSet(viewsets.ModelViewSet):
     def log_dose(self, request, pk=None):
         medication = self.get_object()
 
+        # 1. Safety Check (Keep this!)
         if medication.current_stock <= 0:
             return Response(
                 {'error': 'Out of stock! Cannot log dose.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # The Logic
+        # 2. The "Memory" (New Logic)
+        # We create a record in the history table before updating the main record
+        DoseLog.objects.create(medication=medication)
+
+        # 3. The "Now" (Keep this!)
         medication.last_taken = timezone.now()
         medication.current_stock -= 1
         medication.save()
@@ -52,5 +57,7 @@ class MedicationViewSet(viewsets.ModelViewSet):
         return Response({
             'status': 'Dose logged successfully',
             'new_stock': medication.current_stock,
-            'next_dose': medication.next_dose_time
+            'next_dose': medication.next_dose_time,
+            # Optional: you could even return the log count
+            'total_doses_taken': medication.logs.count()
         })

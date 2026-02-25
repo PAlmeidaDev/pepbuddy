@@ -52,3 +52,15 @@ class Schedule(models.Model):
 
     def __str__(self):
         return f"{self.medication.name} - Every {self.interval_hours}h"
+
+
+class DoseLog(models.Model):
+    medication = models.ForeignKey(Medication, on_delete=models.CASCADE, related_name='logs')
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        # This formats it to: "Medication Name - Feb 25, 10:07 PM"
+        return f"{self.medication.name} - {self.timestamp.strftime('%b %d, %I:%M %p')}"

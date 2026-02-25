@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Medication, Schedule
+from .models import Medication, Schedule, DoseLog
 
 
 # This allows you to add/edit schedules directly on the Medication page!
@@ -27,3 +27,5 @@ class MedicationAdmin(admin.ModelAdmin):
 class ScheduleAdmin(admin.ModelAdmin):
     list_display = ('medication', 'start_time', 'interval_hours', 'is_active')
     list_filter = ('is_active', 'interval_hours')
+
+admin.site.register(DoseLog)
