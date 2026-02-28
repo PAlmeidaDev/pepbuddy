@@ -38,26 +38,33 @@ class MedicationViewSet(viewsets.ModelViewSet):
     def log_dose(self, request, pk=None):
         medication = self.get_object()
 
-        # 1. Safety Check (Keep this!)
-        if medication.current_stock <= 0:
-            return Response(
-                {'error': 'Out of stock! Cannot log dose.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        # Check if user wants to "Shift" the schedule
+        # Default to False if the frontend doesn't send it
+        adjust_schedule = request.data.get('adjust_future_schedule', False)
 
-        # 2. The "Memory" (New Logic)
-        # We create a record in the history table before updating the main record
+        if medication.current_stock <= 0:
+            return Response({'error': 'Out of stock!'}, status=400)
+
+        # 1. Create the History Log
         DoseLog.objects.create(medication=medication)
 
-        # 3. The "Now" (Keep this!)
-        medication.last_taken = timezone.now()
+        # 2. Logic for the "Next Dose"
+        now = timezone.now()
+
+        if adjust_schedule:
+            # PATH A: The "Adjusted" Path
+            # We set the last_taken to 'now', which shifts the whole schedule forward
+            medication.last_taken = now
+        else:
+            # PATH B: The "Strict" Path
+            # If it was due at 12:00 and you took it at 2:00, but want to stay on track:
+            # We calculate where the last dose 'should' have been.
+            # For now, setting it to 'now' is standard, but if we want to be strict,
+            # we can calculate the previous 'expected' slot.
+            # Simplest version: stay on the current timestamp logic.
+            medication.last_taken = now
+
         medication.current_stock -= 1
         medication.save()
 
-        return Response({
-            'status': 'Dose logged successfully',
-            'new_stock': medication.current_stock,
-            'next_dose': medication.next_dose_time,
-            # Optional: you could even return the log count
-            'total_doses_taken': medication.logs.count()
-        })
+        return Response({'status': 'Dose logged'})
